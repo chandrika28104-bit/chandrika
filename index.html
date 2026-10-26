@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AI Career Copilot — Resume & ATS Intelligence</title>
+    <meta name="description" content="Production-grade AI Career Copilot that analyzes resumes against job descriptions using Google Gemini, featuring prompt engineering personas, ATS scoring, PDF parsing, skill gap radar, and history tracking." />
+    <meta property="og:title" content="AI Career Copilot — Resume & ATS Intelligence" />
+    <meta property="og:description" content="Production-grade AI Career Copilot that analyzes resumes against job descriptions using Google Gemini, featuring prompt engineering personas, ATS scoring, PDF parsing, skill gap radar, and history tracking." />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <!-- PDF.js CDN for client-side PDF resume parsing -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script>
+      window.pdfjsLib && (window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js');
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
+

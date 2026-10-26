@@ -221,7 +221,14 @@ export default function App() {
   // Brand info (easily customizable)
   const [studentName, setStudentName] = useState(() => localStorage.getItem('copilot_studentName') || 'Chandrika');
   const [appName, setAppName] = useState(() => localStorage.getItem('copilot_appName') || 'AI Career Copilot');
-  const [apiKey, setApiKey] = useState(() => localStorage.getItem('user_gemini_key') || '');
+  // Read key from all possible environment variable injections (Vite VITE_, process.env, etc.)
+  const envKey =
+    (import.meta as any).env?.VITE_GEMINI_API_KEY ||
+    (import.meta as any).env?.GEMINI_API_KEY ||
+    (typeof process !== 'undefined' && (process.env?.GEMINI_API_KEY || process.env?.VITE_GEMINI_API_KEY)) ||
+    '';
+
+  const [apiKey, setApiKey] = useState(() => localStorage.getItem('user_gemini_key') || envKey || '');
   const [showKeyInput, setShowKeyInput] = useState(false);
 
   // Inputs
@@ -358,10 +365,20 @@ export default function App() {
       }
 
       // Fallback: If deployed as a purely static site on Vercel without a backend server,
-      // call Gemini API directly if user provided their API key!
-      const activeKey = apiKey || (import.meta as any).env?.VITE_GEMINI_API_KEY;
+      // call Gemini API directly if user provided their API key or env var is present!
+      const activeKey =
+        apiKey.trim() ||
+        envKey.trim() ||
+        (import.meta as any).env?.VITE_GEMINI_API_KEY ||
+        (import.meta as any).env?.GEMINI_API_KEY ||
+        (typeof process !== 'undefined' && (process.env?.GEMINI_API_KEY || process.env?.VITE_GEMINI_API_KEY)) ||
+        '';
+
       if (!activeKey) {
-        throw new Error('API key required. Click "Settings / API Key" above to paste your free Gemini key from Google AI Studio.');
+        setShowKeyInput(true);
+        throw new Error(
+          'API Key Required: Please paste your free Gemini API key in the top box (starts with AIzaSy...) or set VITE_GEMINI_API_KEY in Vercel settings and redeploy.'
+        );
       }
 
       const systemInstruction = `${activePersonaPrompt}
@@ -510,9 +527,13 @@ ${result.improvements.map(i => `- ${i}`).join('\n')}
               <button
                 type="button"
                 onClick={() => setShowKeyInput(!showKeyInput)}
-                className="text-xs text-slate-300 hover:text-white px-2.5 py-1.5 rounded-lg border border-slate-700 hover:bg-slate-800 transition-colors"
+                className={`text-xs px-2.5 py-1.5 rounded-lg border transition-colors ${
+                  apiKey || envKey
+                    ? 'bg-emerald-950/60 text-emerald-300 border-emerald-600 hover:bg-emerald-900/60'
+                    : 'text-amber-300 bg-amber-950/40 border-amber-600 hover:bg-amber-900/40'
+                }`}
               >
-                🔑 {apiKey ? 'Key Set ✓' : 'Add API Key'}
+                🔑 {apiKey || envKey ? 'Key Active ✓' : 'Add API Key'}
               </button>
 
               <button

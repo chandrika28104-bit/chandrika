@@ -14,6 +14,23 @@ const PORT = process.env.PORT || 3000;
 
 app.use(express.json({ limit: '10mb' }));
 
+function extractCleanMessage(err: any): string {
+  if (!err) return 'Failed to analyze resume with Gemini AI.';
+  const msg = err.message || String(err);
+  try {
+    const parsed = JSON.parse(msg);
+    if (parsed?.error?.message) {
+      if (parsed.error.code === 503 || parsed.error.status === 'UNAVAILABLE') {
+        return 'Google Gemini AI is currently experiencing high demand (503). Spikes are temporary — please wait 15–30 seconds and click Analyze Resume again.';
+      }
+      return parsed.error.message;
+    }
+  } catch (e) {
+    // Ignore JSON parse error, use raw msg
+  }
+  return msg;
+}
+
 // Helper to instantiate client with either server secret or user-provided override
 function getGenAIClient(customKey?: string) {
   const apiKey = customKey || process.env.GEMINI_API_KEY;
@@ -163,7 +180,9 @@ Perform a complete ATS and qualification analysis now. Return strict JSON.`;
     }
 
     if (!response || !response.text) {
-      throw lastError || new Error('Models currently busy. Please retry in a few moments.');
+      const msg = extractCleanMessage(lastError);
+      res.status(503).json({ error: msg });
+      return;
     }
 
     const text = response.text || '';
@@ -178,7 +197,7 @@ Perform a complete ATS and qualification analysis now. Return strict JSON.`;
   } catch (error: any) {
     console.error('Analysis error:', error);
     res.status(500).json({
-      error: error?.message || 'Failed to analyze resume with Gemini.',
+      error: extractCleanMessage(error),
     });
   }
 });

@@ -1,11 +1,29 @@
 import { GoogleGenAI, Type } from '@google/genai';
 
-export default async function handler(req: any, res: any) {
-  // Handle CORS preflight
+function extractCleanMessage(err) {
+  if (!err) return 'Failed to analyze resume with Gemini AI.';
+  const msg = err.message || String(err);
+  try {
+    const parsed = JSON.parse(msg);
+    if (parsed?.error?.message) {
+      if (parsed.error.code === 503 || parsed.error.status === 'UNAVAILABLE') {
+        return 'Google Gemini AI is currently experiencing high demand (503). Spikes are temporary — please wait 15–30 seconds and click Analyze Resume again.';
+      }
+      return parsed.error.message;
+    }
+  } catch (e) {
+    // Ignore JSON parse error, use raw msg
+  }
+  return msg;
+}
+
+export default async function handler(req, res) {
+  // CORS & headers
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
   if (req.method === 'OPTIONS') {
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
     return res.status(200).end();
   }
 
@@ -14,7 +32,16 @@ export default async function handler(req: any, res: any) {
   }
 
   try {
-    const { resume, jobDesc } = req.body || {};
+    let body = req.body;
+    if (typeof body === 'string') {
+      try {
+        body = JSON.parse(body);
+      } catch (e) {
+        return res.status(400).json({ error: 'Invalid JSON request payload.' });
+      }
+    }
+
+    const { resume, jobDesc } = body || {};
 
     if (!resume || !jobDesc) {
       return res.status(400).json({ error: 'Both resume and job description are required.' });
@@ -24,17 +51,17 @@ export default async function handler(req: any, res: any) {
       return res.status(400).json({ error: 'Resume and job description must be text.' });
     }
 
-    if (resume.trim().length < 30 || jobDesc.trim().length < 30) {
+    if (resume.trim().length < 20 || jobDesc.trim().length < 20) {
       return res.status(400).json({
-        error: 'Please provide complete details (at least 30 characters each for resume and job description).',
+        error: 'Please provide at least 20 characters for both resume and job description.',
       });
     }
 
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {
+      console.error('CRITICAL: GEMINI_API_KEY is not defined in process.env');
       return res.status(500).json({
-        error:
-          'GEMINI_API_KEY environment variable is not configured. Please add GEMINI_API_KEY in your Vercel Project Settings > Environment Variables.',
+        error: 'GEMINI_API_KEY environment variable is not configured. Please add GEMINI_API_KEY in your Vercel Project Settings > Environment Variables.',
       });
     }
 
@@ -100,10 +127,9 @@ Perform a complete ATS and qualification analysis now. Return strict JSON.`;
       },
     };
 
-    // Resilient fallback across Google's supported models if one encounters temporary 503 high demand
     const candidateModels = ['gemini-3.8-flash', 'gemini-3.1-flash-lite', 'gemini-flash-latest'];
-    let response: any = null;
-    let lastError: any = null;
+    let response = null;
+    let lastError = null;
 
     for (const model of candidateModels) {
       try {
@@ -112,28 +138,31 @@ Perform a complete ATS and qualification analysis now. Return strict JSON.`;
           contents: prompt,
           config: schemaConfig,
         });
-        if (response?.text) break;
-      } catch (err: any) {
-        console.warn(`Model ${model} encountered an issue, trying next model:`, err?.message || err);
+
+        if (response && response.text) {
+          break;
+        }
+      } catch (err) {
+        console.warn(`Model ${model} call failed:`, err?.message || err);
         lastError = err;
       }
     }
 
     if (!response || !response.text) {
-      throw lastError || new Error('All models were unavailable. Please try again in a few moments.');
+      const cleanMsg = extractCleanMessage(lastError);
+      return res.status(503).json({ error: cleanMsg });
     }
 
-    const text = response.text || '';
-    const data = JSON.parse(text);
+    const data = JSON.parse(response.text);
 
     return res.status(200).json({
       success: true,
       data,
     });
-  } catch (error: any) {
-    console.error('Analysis error:', error);
+  } catch (error) {
+    console.error('Analyze handler error:', error);
     return res.status(500).json({
-      error: error?.message || 'Failed to analyze resume with Gemini AI. Please try again.',
+      error: extractCleanMessage(error),
     });
   }
 }

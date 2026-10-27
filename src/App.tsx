@@ -1,459 +1,149 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   Sparkles,
   Upload,
   FileText,
   Briefcase,
   AlertCircle,
-  RefreshCw,
   CheckCircle2,
+  XCircle,
   Copy,
   Check,
-  Download,
   Printer,
-  History,
-  Trash2,
-  Rocket,
-  X,
-  ExternalLink,
-  ChevronDown,
-  ChevronUp,
-  FileCheck,
-  Code,
-  Shield,
-  Layers,
+  Download,
+  RefreshCw,
+  Search,
+  CheckCheck,
 } from 'lucide-react';
 
-// Benchmark test cases from Step 6
-interface SampleCase {
-  id: string;
-  name: string;
-  role: string;
-  expectedScore: string;
-  resume: string;
-  jobDesc: string;
-}
-
-const SAMPLE_CASES: SampleCase[] = [
-  {
-    id: 'case-1-junior-fullstack',
-    name: 'Alex Chen',
-    role: 'Full Stack Engineer (React/Node)',
-    expectedScore: '74%',
-    resume: `Alex Chen
-San Francisco, CA • alex.chen@example.com • linkedin.com/in/alexchen-dev
-
-PROFESSIONAL SUMMARY
-Passionate Full Stack Developer with 2+ years of experience building web applications using React, Node.js, Express, and PostgreSQL. Improved page load speeds by 30% and built REST APIs serving 20,000+ monthly active users.
-
-TECHNICAL SKILLS
-• Languages: JavaScript (ES6+), TypeScript, HTML5, CSS3, SQL
-• Frontend: React 18, Redux Toolkit, Tailwind CSS, Vite
-• Backend: Node.js, Express.js, RESTful API Design, JWT Authentication
-• Databases: PostgreSQL, MongoDB, Redis
-• Tools: Git, GitHub, Jest, Postman, Linux
-
-WORK EXPERIENCE
-Junior Software Engineer | CloudScale Tech | Austin, TX (July 2024 - Present)
-• Built 14+ reusable React UI components with TypeScript and Tailwind CSS.
-• Developed backend microservices using Node.js and Express, cutting latency from 450ms to 180ms.
-• Integrated Stripe payment checkout handling $120K+ in monthly customer subscriptions.
-• Implemented client caching with React Query and Redis, cutting redundant queries by 42%.
-
-EDUCATION
-B.S. in Computer Science | University of Texas at Austin (Dec 2023)`,
-    jobDesc: `Mid-Level Full Stack Software Engineer
-VentureLink Technologies — San Francisco, CA (Hybrid)
-
-RESPONSIBILITIES:
-• Build responsive, high-performance web applications using Next.js (App Router), TypeScript, and Tailwind CSS.
-• Design robust RESTful and GraphQL APIs using Node.js with PostgreSQL and Prisma ORM.
-• Containerize services using Docker and deploy to AWS (ECS, S3, RDS) using Terraform and CI/CD pipelines.
-• Implement monitoring with Datadog and automated test suites.
-
-REQUIRED QUALIFICATIONS:
-• 3+ years software engineering experience in production web applications.
-• Strong proficiency in TypeScript, React, and Next.js.
-• Experience with Node.js, PostgreSQL, and cloud infrastructure (AWS ECS, Docker, Terraform).
-• Excellent communication and collaborative problem solving.`
-  },
-  {
-    id: 'case-2-data-analyst',
-    name: 'Priya Sharma',
-    role: 'Data Analyst → Analytics Engineer',
-    expectedScore: '82%',
-    resume: `Priya Sharma
-Chicago, IL • priya.sharma@analytics.io • linkedin.com/in/priyasharma-data
-
-SUMMARY
-Results-oriented Data Analyst with 4 years of experience translating transactional datasets into executive dashboards and automated KPI reporting. Proficient in SQL, Python, Tableau, and Snowflake.
-
-SKILLS
-• Analytics: Advanced SQL (Window functions, CTEs), Data Warehousing, Star Schema, ETL
-• Tools: Snowflake, Tableau, Power BI, Google BigQuery, dbt (foundational)
-• Programming: Python (Pandas, NumPy), Git
-
-EXPERIENCE
-Senior BI Analyst | RetailHub Inc. (March 2023 - Present)
-• Spearheaded migration of 40+ legacy SQL reports to Snowflake, cutting query runtimes by 65%.
-• Architected 12 Tableau dashboards tracking $85M annual revenue for C-suite stakeholders.
-• Developed automated Python scripts for anomaly detection across 1.2M daily sales records.
-
-EDUCATION
-B.S. in Statistics & Data Science | UIUC (2021)`,
-    jobDesc: `Senior Analytics Engineer
-FinScale Insights — New York, NY (Remote)
-
-RESPONSIBILITIES:
-• Write modular, tested dbt models applying dimensional data modeling best practices.
-• Build data transformation pipelines connecting Fivetran, Snowflake, and reverse-ETL tools.
-• Implement CI tests using dbt-expectations, GitHub Actions, and SQLFluff linters.
-
-REQUIREMENTS:
-• 3-5 years experience in analytics engineering or data modeling.
-• Mastery of SQL, including query performance tuning and analytical window functions.
-• In-depth production experience with dbt and Snowflake.`
-  },
-  {
-    id: 'case-3-ml-engineer',
-    name: 'Marcus Vance',
-    role: 'Senior Machine Learning Engineer',
-    expectedScore: '91%',
-    resume: `Marcus Vance, M.S.
-Seattle, WA • marcus.vance@mlengineer.ai • github.com/marcus-vance
-
-PROFESSIONAL SUMMARY
-Senior ML Engineer with 6 years experience productionizing deep learning, NLP, and LLM fine-tuning pipelines. Built real-time inference systems serving 4,000 QPS with sub-50ms p99 latency on Triton and vLLM.
-
-CORE SKILLS
-• GenAI: Transformer architectures, LoRA/QLoRA, RAG pipelines, LangChain, Vector DBs (Pinecone)
-• Frameworks: PyTorch, Hugging Face, DeepSpeed, Ray, ONNX, TensorRT-LLM
-• Infrastructure: Kubernetes (K8s), Docker, AWS SageMaker, GCP Vertex AI, Triton
-• Languages: Python (Expert), C++, SQL
-
-EXPERIENCE
-Senior ML Engineer | OmniVision AI (Jan 2023 - Present)
-• Led engineering of enterprise multimodal RAG engine, improving search relevance by 43%.
-• Optimized LLM serving with vLLM on AWS EKS, slashing GPU inference costs by $180,000/yr.
-• Fine-tuned 8B and 70B parameter models using QLoRA and DeepSpeed ZeRO-3.
-
-EDUCATION
-M.S. in Computer Science (Machine Learning) | University of Washington (2019)`,
-    jobDesc: `Lead AI / LLM Systems Engineer
-Anthrosphere Labs — San Francisco, CA (Hybrid)
-
-RESPONSIBILITIES:
-• Architect, deploy, and benchmark distributed LLM inference clusters using vLLM or Triton on Kubernetes.
-• Build robust Retrieval-Augmented Generation (RAG) architectures with hybrid dense/sparse search.
-• Implement scalable fine-tuning pipelines (LoRA, DPO, RLHF) across multi-GPU clusters.
-
-REQUIREMENTS:
-• 5+ years ML engineering experience, with 2+ years dedicated to LLMs and modern NLP.
-• Expert mastery of PyTorch and Python.
-• Production experience with low-latency GPU serving engines (vLLM, TensorRT) on Kubernetes.`
-  }
-];
-
-// Personas from Step 4 & 5
-interface Persona {
-  id: string;
-  name: string;
-  desc: string;
-  prompt: string;
-}
-
-const PERSONAS: Persona[] = [
-  {
-    id: 'general',
-    name: 'Enterprise ATS Coach (Default)',
-    desc: 'Standard ATS screener & corporate recruiter',
-    prompt: `You are an expert career coach and enterprise ATS (Applicant Tracking System) specialist with 10+ years of experience helping candidates pass automated resume screening at top companies.`
-  },
-  {
-    id: 'tech',
-    name: 'Tech Recruiter (Coding & Systems)',
-    desc: 'Deep focus on technical depth, metrics & modern stack',
-    prompt: `You are a Silicon Valley Principal Tech Recruiter and Engineering Hiring Manager with 12+ years of experience evaluating software engineers, AI/ML practitioners, and technical leaders. Scrutinize system scale, metrics (Google XYZ formula), architecture complexity, and hands-on coding depth.`
-  },
-  {
-    id: 'fresh_grad',
-    name: 'Campus & Early Career Recruiter',
-    desc: 'Focus on potential, projects & coursework',
-    prompt: `You are a University Relations Lead and Early-Career Talent Specialist. Analyze this entry-level resume against the junior job description. Assess potential, foundational coursework, hackathons, and internship accomplishments.`
-  },
-  {
-    id: 'career_changer',
-    name: 'Career Pivot Strategist',
-    desc: 'Highlight transferable skills from past roles',
-    prompt: `You are an executive Career Transition Strategist who specializes in translating non-traditional backgrounds, transferable skills, and adjacent industry experience into compelling tech qualifications.`
-  }
-];
-
-interface AnalysisResult {
+interface AnalysisData {
   ats_score: number;
   summary: string;
-  strengths: string[];
+  match_analysis: string;
+  matching_skills: string[];
   missing_keywords: string[];
+  strengths: string[];
+  weaknesses: string[];
   improvements: string[];
-  salary_estimate?: {
-    range: string;
-    notes: string;
-  };
-  seniority_estimate?: {
-    candidate_level: string;
-    role_level: string;
-    alignment: string;
-  };
-  interview_questions?: string[];
-  cover_letter_hook?: string;
-}
-
-interface SavedHistory {
-  id: string;
-  date: string;
-  candidateName: string;
-  role: string;
-  score: number;
-  data: AnalysisResult;
 }
 
 export default function App() {
-  // Brand info (easily customizable)
-  const [studentName, setStudentName] = useState(() => localStorage.getItem('copilot_studentName') || 'Chandrika');
-  const [appName, setAppName] = useState(() => localStorage.getItem('copilot_appName') || 'AI Career Copilot');
-  // Read key from all possible environment variable injections (Vite VITE_, process.env, etc.)
-  const envKey =
-    (import.meta as any).env?.VITE_GEMINI_API_KEY ||
-    (import.meta as any).env?.GEMINI_API_KEY ||
-    (typeof process !== 'undefined' && (process.env?.GEMINI_API_KEY || process.env?.VITE_GEMINI_API_KEY)) ||
-    '';
-
-  const [apiKey, setApiKey] = useState(() => localStorage.getItem('user_gemini_key') || envKey || '');
-  const [showKeyInput, setShowKeyInput] = useState(false);
-
-  // Inputs
   const [resume, setResume] = useState('');
   const [jobDesc, setJobDesc] = useState('');
-  const [selectedPersonaId, setSelectedPersonaId] = useState('general');
-  const [showPromptEditor, setShowPromptEditor] = useState(false);
-  const [customPrompt, setCustomPrompt] = useState(PERSONAS[0].prompt);
-
-  // Execution state
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [result, setResult] = useState<AnalysisResult | null>(null);
-
-  // Modals & UI
-  const [isDeployModalOpen, setIsDeployModalOpen] = useState(false);
+  const [result, setResult] = useState<AnalysisData | null>(null);
   const [copiedKeyword, setCopiedKeyword] = useState<string | null>(null);
-  const [copiedHook, setCopiedHook] = useState(false);
-  const [activeTab, setActiveTab] = useState<'analyzer' | 'history' | 'guide'>('analyzer');
-
-  // History
-  const [history, setHistory] = useState<SavedHistory[]>(() => {
-    try {
-      const saved = localStorage.getItem('copilot_simple_history');
-      return saved ? JSON.parse(saved) : [];
-    } catch {
-      return [];
-    }
-  });
+  const [fileName, setFileName] = useState<string | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const resultsRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    localStorage.setItem('copilot_studentName', studentName);
-  }, [studentName]);
-
-  useEffect(() => {
-    localStorage.setItem('copilot_appName', appName);
-  }, [appName]);
-
-  useEffect(() => {
-    if (apiKey) localStorage.setItem('user_gemini_key', apiKey);
-  }, [apiKey]);
-
-  useEffect(() => {
-    try {
-      localStorage.setItem('copilot_simple_history', JSON.stringify(history));
-    } catch {
-      // ignore
-    }
-  }, [history]);
-
-  // Load sample case
-  const handleLoadSample = (sample: SampleCase) => {
-    setResume(sample.resume);
-    setJobDesc(sample.jobDesc);
-    setError(null);
-  };
-
-  // File upload parser (PDF, TXT, MD)
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  // File upload handler (PDF, TXT, MD, DOCX)
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
     setError(null);
+    setFileName(file.name);
+
     try {
       if (file.type === 'application/pdf' || file.name.endsWith('.pdf')) {
-        // PDF parser via window.pdfjsLib
-        if (window.pdfjsLib) {
+        // Use PDF.js if available
+        if ((window as any).pdfjsLib) {
           const buffer = await file.arrayBuffer();
-          const pdf = await window.pdfjsLib.getDocument({ data: buffer }).promise;
-          let fullText = '';
+          const pdf = await (window as any).pdfjsLib.getDocument({ data: buffer }).promise;
+          let extracted = '';
           for (let i = 1; i <= pdf.numPages; i++) {
             const page = await pdf.getPage(i);
             const content = await page.getTextContent();
-            fullText += content.items.map((it: any) => it.str).join(' ') + '\n';
+            extracted += content.items.map((it: any) => it.str).join(' ') + '\n';
           }
-          if (fullText.trim()) {
-            setResume(fullText.trim());
+          if (extracted.trim()) {
+            setResume(extracted.trim());
             return;
           }
         }
       }
 
-      // Plaintext or fallback
+      // Plaintext or fallback text reading
       const text = await file.text();
       if (text.trim()) {
         setResume(text.trim());
       } else {
-        throw new Error('File content was empty.');
+        throw new Error('The uploaded file was empty. Please paste your resume text directly.');
       }
     } catch (err: any) {
-      setError('Could not extract text from file. Please copy and paste your resume text directly.');
+      console.error(err);
+      setError('Could not extract text from this file. Please paste your resume text directly into the box.');
     }
   };
 
-  // Main Analysis function
+  // Analyze Resume Function
   const handleAnalyze = async () => {
     if (!resume.trim() || !jobDesc.trim()) {
-      setError('Please paste both your Resume and the Job Description to analyze.');
+      setError('Please provide both your Resume text and the Job Description to analyze.');
       return;
     }
 
-    if (resume.trim().length < 40 || jobDesc.trim().length < 40) {
-      setError('Content is too short. Please paste complete resume and job description details.');
+    if (resume.trim().length < 30 || jobDesc.trim().length < 30) {
+      setError('Please provide more complete details for both your resume and the job description (at least 30 characters each).');
       return;
     }
 
     setIsLoading(true);
     setError(null);
+    setResult(null);
 
-    const activePersonaPrompt = customPrompt.trim() || PERSONAS.find(p => p.id === selectedPersonaId)?.prompt || PERSONAS[0].prompt;
+    // 45-second timeout controller so it never hangs in infinite loading
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 45000);
 
     try {
-      // First attempt: call local server proxy route
       const response = await fetch('/api/analyze', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           resume: resume.trim(),
           jobDesc: jobDesc.trim(),
-          customSystemPrompt: activePersonaPrompt,
-          apiKey: apiKey || undefined,
         }),
+        signal: controller.signal,
       });
 
-      if (response.ok) {
-        const json = await response.json();
-        if (json.success && json.data) {
-          handleSuccess(json.data);
-          return;
-        }
+      clearTimeout(timeoutId);
+
+      // Verify that the response is JSON, not HTML from a catch-all rewrite
+      const contentType = response.headers.get('content-type') || '';
+      if (!contentType.includes('application/json')) {
+        throw new Error('Server returned an invalid response. Please ensure the backend is running and GEMINI_API_KEY is configured in Vercel.');
       }
 
-      // Fallback: If deployed as a purely static site on Vercel without a backend server,
-      // call Gemini API directly if user provided their API key or env var is present!
-      const activeKey =
-        apiKey.trim() ||
-        envKey.trim() ||
-        (import.meta as any).env?.VITE_GEMINI_API_KEY ||
-        (import.meta as any).env?.GEMINI_API_KEY ||
-        (typeof process !== 'undefined' && (process.env?.GEMINI_API_KEY || process.env?.VITE_GEMINI_API_KEY)) ||
-        '';
+      const json = await response.json();
 
-      if (!activeKey) {
-        setShowKeyInput(true);
-        throw new Error(
-          'API Key Required: Please paste your free Gemini API key in the top box (starts with AIzaSy...) or set VITE_GEMINI_API_KEY in Vercel settings and redeploy.'
-        );
+      if (!response.ok || !json.success) {
+        throw new Error(json.error || `Server error (${response.status}) while analyzing resume.`);
       }
 
-      const systemInstruction = `${activePersonaPrompt}
-
-Your task: Analyze the provided resume against the job description and return strict JSON with:
-{
-  "ats_score": <number 0-100>,
-  "summary": "<2-3 sentence overall assessment>",
-  "strengths": ["<strength 1>", "<strength 2>", "<strength 3>", "<strength 4>"],
-  "missing_keywords": ["<keyword 1>", "<keyword 2>", "<keyword 3>", "<keyword 4>", "<keyword 5>"],
-  "improvements": ["<actionable improvement 1>", "<actionable improvement 2>", "<actionable improvement 3>"],
-  "salary_estimate": { "range": "$110,000 - $140,000", "notes": "Estimated market benchmark" },
-  "seniority_estimate": { "candidate_level": "Mid-Level", "role_level": "Mid-Level", "alignment": "Strong Fit" },
-  "interview_questions": ["<question 1 based on gaps>", "<question 2>"],
-  "cover_letter_hook": "<compelling 2-sentence opening hook tailored to this job>"
-}`;
-
-      const directRes = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key=${activeKey}`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            contents: [
-              {
-                parts: [
-                  { text: systemInstruction + `\n\nRESUME:\n${resume}\n\nJOB DESCRIPTION:\n${jobDesc}` },
-                ],
-              },
-            ],
-            generationConfig: {
-              temperature: 0.2,
-              responseMimeType: 'application/json',
-            },
-          }),
-        }
-      );
-
-      const directData = await directRes.json();
-      if (!directRes.ok) {
-        throw new Error(directData.error?.message || `API Error: ${directRes.status}`);
+      if (!json.data || typeof json.data.ats_score !== 'number') {
+        throw new Error('AI returned an unexpected response structure. Please try again.');
       }
 
-      const rawText = directData.candidates?.[0]?.content?.parts?.[0]?.text;
-      if (!rawText) throw new Error('Empty response from AI.');
+      setResult(json.data);
 
-      const parsed = JSON.parse(rawText);
-      handleSuccess(parsed);
+      setTimeout(() => {
+        resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 100);
     } catch (err: any) {
-      console.error(err);
-      setError(err?.message || 'Failed to complete analysis. Please check your inputs and try again.');
+      clearTimeout(timeoutId);
+      console.error('Analysis error:', err);
+      if (err.name === 'AbortError') {
+        setError('Analysis request timed out after 45 seconds. Please check your network and try again.');
+      } else {
+        setError(err.message || 'An error occurred while contacting the AI Career Copilot service.');
+      }
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const handleSuccess = (data: AnalysisResult) => {
-    setResult(data);
-    const firstLine = resume.split('\n')[0]?.trim().slice(0, 35) || 'Candidate';
-    const firstJobLine = jobDesc.split('\n')[0]?.trim().slice(0, 35) || 'Target Role';
-
-    const newHistoryItem: SavedHistory = {
-      id: `hist-${Date.now()}`,
-      date: new Date().toLocaleDateString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }),
-      candidateName: firstLine,
-      role: firstJobLine,
-      score: data.ats_score,
-      data,
-    };
-
-    setHistory(prev => [newHistoryItem, ...prev.slice(0, 9)]);
-
-    setTimeout(() => {
-      resultsRef.current?.scrollIntoView({ behavior: 'smooth' });
-    }, 100);
   };
 
   const handleCopyKeyword = (kw: string) => {
@@ -462,688 +152,483 @@ Your task: Analyze the provided resume against the job description and return st
     setTimeout(() => setCopiedKeyword(null), 1500);
   };
 
-  const handleCopyHook = (text: string) => {
-    navigator.clipboard.writeText(text);
-    setCopiedHook(true);
-    setTimeout(() => setCopiedHook(false), 2000);
-  };
-
   const handleExportMarkdown = () => {
     if (!result) return;
     const md = `# ATS Resume Analysis Report
-Generated by ${appName} · Powered by Google Gemini
+Generated by AI Career Copilot · Powered by Gemini AI
 Date: ${new Date().toLocaleDateString()}
 
-## Overall ATS Score: ${result.ats_score} / 100
+## Overall ATS Compatibility Score: ${result.ats_score} / 100
 
-### Summary Assessment
+### Executive Assessment
 ${result.summary}
 
-### Key Strengths
-${result.strengths.map(s => `- ${s}`).join('\n')}
+### Detailed Match Analysis
+${result.match_analysis}
 
-### Critical Missing Keywords (Add to Resume)
-${result.missing_keywords.map(k => `- ${k}`).join('\n')}
+### Matching Skills & Keywords Found
+${result.matching_skills.map((s) => `- ${s}`).join('\n')}
 
-### Actionable Improvements
-${result.improvements.map(i => `- ${i}`).join('\n')}
+### Critical Missing Keywords (To Add)
+${result.missing_keywords.map((k) => `- ${k}`).join('\n')}
 
-### Tailored Cover Letter Hook
-"${result.cover_letter_hook || ''}"
+### Standout Resume Strengths
+${result.strengths.map((s) => `- ${s}`).join('\n')}
+
+### Key Weaknesses / Gaps
+${result.weaknesses.map((w) => `- ${w}`).join('\n')}
+
+### Recommended Improvements
+${result.improvements.map((i) => `- ${i}`).join('\n')}
 `;
     const blob = new Blob([md], { type: 'text/markdown' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `resume-analysis-${Date.now()}.md`;
+    a.download = `ats-resume-analysis-${Date.now()}.md`;
     a.click();
     URL.revokeObjectURL(url);
   };
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 font-sans antialiased flex flex-col justify-between">
-      {/* Top Banner / Navigation */}
+      {/* Top Header */}
       <div>
-        <header className="bg-slate-900 text-white border-b border-slate-800">
+        <header className="bg-slate-900 text-white border-b border-slate-800 shadow-md">
           <div className="max-w-5xl mx-auto px-4 py-4 flex flex-col sm:flex-row items-center justify-between gap-3">
-            <div className="flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-xl bg-orange-500 flex items-center justify-center text-white shadow-md">
-                <Sparkles className="w-5 h-5" />
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-red-600 flex items-center justify-center text-white shadow-md">
+                <Sparkles className="w-5 h-5 text-white" />
               </div>
               <div>
-                <h1 className="text-lg font-extrabold tracking-tight flex items-center gap-2">
-                  {appName}
-                  <span className="text-[10px] bg-orange-500/20 text-orange-400 border border-orange-500/30 px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">
+                <h1 className="text-xl font-extrabold tracking-tight flex items-center gap-2">
+                  AI Career <span className="text-red-500">Copilot</span>
+                  <span className="text-[10px] bg-red-950/80 text-red-300 border border-red-700/60 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">
                     Gemini AI
                   </span>
                 </h1>
                 <p className="text-xs text-slate-400">
-                  Built by <strong className="text-slate-200">{studentName}</strong> · AI/ML Engineering Capilot
+                  Resume Analysis & ATS Intelligence · Built by <strong className="text-slate-200">Chandrika</strong>
                 </p>
               </div>
             </div>
 
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => setShowKeyInput(!showKeyInput)}
-                className={`text-xs px-2.5 py-1.5 rounded-lg border transition-colors ${
-                  apiKey || envKey
-                    ? 'bg-emerald-950/60 text-emerald-300 border-emerald-600 hover:bg-emerald-900/60'
-                    : 'text-amber-300 bg-amber-950/40 border-amber-600 hover:bg-amber-900/40'
-                }`}
-              >
-                🔑 {apiKey || envKey ? 'Key Active ✓' : 'Add API Key'}
-              </button>
+            <div className="text-xs text-slate-400 text-right hidden sm:block">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-800 text-slate-300 border border-slate-700">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                Gemini 3.8 Flash Active
+              </span>
+            </div>
+          </div>
+        </header>
 
-              <button
-                type="button"
-                onClick={() => setIsDeployModalOpen(true)}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold bg-orange-500 hover:bg-orange-600 text-white rounded-lg transition-all shadow-sm"
-              >
-                <Rocket className="w-3.5 h-3.5" />
-                <span>Deploy to Vercel</span>
-              </button>
+        {/* Main Content */}
+        <main className="max-w-5xl mx-auto px-4 py-8 space-y-6">
+          {/* Subheader Intro */}
+          <div className="text-center max-w-2xl mx-auto space-y-2">
+            <h2 className="text-2xl font-black text-slate-900 tracking-tight">
+              Optimize Your Resume for Enterprise ATS
+            </h2>
+            <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
+              Paste your resume and a target job description below. Our AI evaluates keyword match, experience alignment, strengths, and gives actionable improvements to help you land the interview.
+            </p>
+          </div>
+
+          {/* Dual Input Section */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            {/* 1. Resume Input Card */}
+            <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex flex-col justify-between">
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <div className="w-7 h-7 rounded-lg bg-red-50 text-red-600 flex items-center justify-center font-bold text-xs">
+                      <FileText className="w-4 h-4" />
+                    </div>
+                    <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider">
+                      Your Resume
+                    </h3>
+                  </div>
+
+                  <div>
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      accept=".pdf,.txt,.md"
+                      onChange={handleFileUpload}
+                      className="hidden"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="inline-flex items-center gap-1.5 text-xs font-semibold text-red-600 bg-red-50 hover:bg-red-100 border border-red-200/80 px-2.5 py-1.5 rounded-lg transition-colors cursor-pointer"
+                    >
+                      <Upload className="w-3.5 h-3.5" />
+                      <span>{fileName ? 'Change File' : 'Upload Resume (PDF/TXT)'}</span>
+                    </button>
+                  </div>
+                </div>
+
+                {fileName && (
+                  <div className="mb-2 text-[11px] text-slate-600 bg-slate-50 px-2.5 py-1 rounded-md border border-slate-200 flex items-center justify-between">
+                    <span className="truncate">Loaded: <strong>{fileName}</strong></span>
+                    <button
+                      onClick={() => {
+                        setFileName(null);
+                        setResume('');
+                      }}
+                      className="text-slate-400 hover:text-red-500 ml-2"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                )}
+
+                <textarea
+                  value={resume}
+                  onChange={(e) => setResume(e.target.value)}
+                  rows={12}
+                  placeholder="Paste your full resume text here or upload a file above...&#10;&#10;Include:&#10;• Contact info & professional summary&#10;• Work experience & measurable achievements&#10;• Technical and soft skills&#10;• Education and projects"
+                  className="w-full text-xs font-mono p-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-red-500 leading-relaxed"
+                />
+              </div>
+
+              <div className="mt-2.5 flex items-center justify-between text-[11px] text-slate-400">
+                <span>
+                  Words: {resume.trim() ? resume.trim().split(/\s+/).length : 0} · Characters: {resume.length}
+                </span>
+                {resume && (
+                  <button
+                    onClick={() => {
+                      setResume('');
+                      setFileName(null);
+                    }}
+                    className="text-slate-400 hover:text-red-600 font-medium transition-colors"
+                  >
+                    Clear Text
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* 2. Job Description Input Card */}
+            <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex flex-col justify-between">
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <div className="w-7 h-7 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-xs">
+                      <Briefcase className="w-4 h-4" />
+                    </div>
+                    <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider">
+                      Target Job Description
+                    </h3>
+                  </div>
+                </div>
+
+                <textarea
+                  value={jobDesc}
+                  onChange={(e) => setJobDesc(e.target.value)}
+                  rows={12}
+                  placeholder="Paste the target job posting here...&#10;&#10;Include:&#10;• Target job title & role level&#10;• Required and preferred technical skills&#10;• Key job responsibilities&#10;• Years of experience required"
+                  className="w-full text-xs font-mono p-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-red-500 leading-relaxed"
+                />
+              </div>
+
+              <div className="mt-2.5 flex items-center justify-between text-[11px] text-slate-400">
+                <span>
+                  Words: {jobDesc.trim() ? jobDesc.trim().split(/\s+/).length : 0} · Characters: {jobDesc.length}
+                </span>
+                {jobDesc && (
+                  <button
+                    onClick={() => setJobDesc('')}
+                    className="text-slate-400 hover:text-red-600 font-medium transition-colors"
+                  >
+                    Clear Text
+                  </button>
+                )}
+              </div>
             </div>
           </div>
 
-          {/* Collapsible API Key Bar */}
-          {showKeyInput && (
-            <div className="bg-slate-800 px-4 py-3 border-t border-slate-700 text-xs text-slate-300">
-              <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
-                <div className="flex items-center gap-2 w-full sm:w-auto">
-                  <span className="font-semibold text-slate-200 shrink-0">Gemini Key:</span>
-                  <input
-                    type="password"
-                    value={apiKey}
-                    onChange={e => setApiKey(e.target.value)}
-                    placeholder="AIzaSy... (leave empty to use server default)"
-                    className="px-2.5 py-1 bg-slate-900 border border-slate-700 rounded text-xs text-white w-full sm:w-72 focus:outline-none focus:ring-1 focus:ring-orange-500"
-                  />
-                </div>
-                <div className="text-[11px] text-slate-400">
-                  Automatic in AI Studio dev server · Optional for direct client Vercel deployment
-                </div>
+          {/* Error Banner */}
+          {error && (
+            <div className="p-4 bg-red-50 border border-red-200 text-red-900 rounded-2xl text-xs flex items-start gap-3 shadow-xs">
+              <AlertCircle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
+              <div className="space-y-1">
+                <strong className="block font-bold">Analysis Error</strong>
+                <span>{error}</span>
               </div>
             </div>
           )}
 
-          {/* Tabs */}
-          <div className="max-w-5xl mx-auto px-4 flex items-center gap-2 text-xs border-t border-slate-800/80 pt-2 pb-1">
-            <button
-              onClick={() => setActiveTab('analyzer')}
-              className={`px-3 py-1.5 rounded-md font-semibold transition-colors ${
-                activeTab === 'analyzer' ? 'bg-orange-500 text-white' : 'text-slate-400 hover:text-white'
-              }`}
-            >
-              🚀 Resume Analyzer
-            </button>
-            <button
-              onClick={() => setActiveTab('history')}
-              className={`px-3 py-1.5 rounded-md font-semibold transition-colors ${
-                activeTab === 'history' ? 'bg-orange-500 text-white' : 'text-slate-400 hover:text-white'
-              }`}
-            >
-              📊 Test History ({history.length})
-            </button>
-            <button
-              onClick={() => setActiveTab('guide')}
-              className={`px-3 py-1.5 rounded-md font-semibold transition-colors ${
-                activeTab === 'guide' ? 'bg-orange-500 text-white' : 'text-slate-400 hover:text-white'
-              }`}
-            >
-              📖 Prompt Guide & Vercel Steps
-            </button>
-          </div>
-        </header>
+          {/* Analyze Resume Button */}
+          <button
+            type="button"
+            onClick={handleAnalyze}
+            disabled={isLoading}
+            className="w-full py-4 px-6 bg-red-600 hover:bg-red-700 active:scale-[0.99] disabled:opacity-60 text-white font-extrabold text-sm rounded-2xl transition-all shadow-md flex items-center justify-center gap-2.5 cursor-pointer"
+          >
+            {isLoading ? (
+              <>
+                <RefreshCw className="w-4 h-4 animate-spin" />
+                <span>Analyzing Resume with Gemini AI...</span>
+              </>
+            ) : (
+              <>
+                <Sparkles className="w-4 h-4 text-white" />
+                <span>Analyze Resume</span>
+              </>
+            )}
+          </button>
 
-        {/* Content Area */}
-        <main className="max-w-5xl mx-auto px-4 py-6 space-y-6">
-          {activeTab === 'analyzer' && (
-            <>
-              {/* Quick Sample Selector Bar (Step 6) */}
-              <div className="bg-white p-3.5 rounded-xl border border-slate-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
-                <div className="flex items-center gap-1.5">
-                  <span className="font-bold text-slate-700 uppercase tracking-wider text-[11px]">
-                    Step 6 Test Samples:
-                  </span>
-                  <span className="text-slate-400 text-[11px]">Click to load instant test pair:</span>
-                </div>
+          {/* Loading Indicator State */}
+          {isLoading && (
+            <div className="bg-white p-8 rounded-2xl border border-slate-200 shadow-xs text-center space-y-3 animate-in fade-in duration-200">
+              <div className="w-10 h-10 border-4 border-slate-200 border-t-red-600 rounded-full animate-spin mx-auto" />
+              <h3 className="text-sm font-bold text-slate-900">
+                Evaluating Resume against Job Description
+              </h3>
+              <p className="text-xs text-slate-500 max-w-md mx-auto">
+                Comparing keyword frequencies, hard technical skills, experience alignment, and formatting standards with Google Gemini...
+              </p>
+            </div>
+          )}
 
-                <div className="flex items-center gap-2 flex-wrap">
-                  {SAMPLE_CASES.map(sample => (
-                    <button
-                      key={sample.id}
-                      type="button"
-                      onClick={() => handleLoadSample(sample)}
-                      className="px-2.5 py-1 bg-slate-100 hover:bg-orange-50 hover:text-orange-600 hover:border-orange-300 border border-slate-200 rounded-lg text-slate-700 font-semibold transition-all"
-                    >
-                      {sample.name} ({sample.expectedScore})
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Persona Selector (Step 4 & 5 Prompt Engineering) */}
-              <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs space-y-2 text-xs">
-                <div className="flex items-center justify-between">
+          {/* Results Section */}
+          <div ref={resultsRef}>
+            {result && (
+              <div className="space-y-6 animate-in fade-in slide-in-from-bottom-3 duration-300">
+                {/* Result Actions Bar */}
+                <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs flex items-center justify-between flex-wrap gap-2 text-xs">
                   <div className="flex items-center gap-2">
-                    <span className="font-bold text-slate-800 uppercase tracking-wider text-[11px]">
-                      Step 5: System Prompt Persona
-                    </span>
-                    <select
-                      value={selectedPersonaId}
-                      onChange={e => {
-                        setSelectedPersonaId(e.target.value);
-                        const p = PERSONAS.find(it => it.id === e.target.value);
-                        if (p) setCustomPrompt(p.prompt);
-                      }}
-                      className="px-2 py-1 bg-slate-50 border border-slate-200 rounded-lg font-medium text-slate-800 focus:outline-none focus:ring-1 focus:ring-orange-500"
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                    <span className="font-bold text-slate-800">Analysis Complete</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={handleExportMarkdown}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-lg transition-colors cursor-pointer"
                     >
-                      {PERSONAS.map(p => (
-                        <option key={p.id} value={p.id}>
-                          {p.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={() => setShowPromptEditor(!showPromptEditor)}
-                    className="text-orange-600 hover:text-orange-700 font-semibold flex items-center gap-1"
-                  >
-                    <span>{showPromptEditor ? 'Hide Prompt' : 'View / Edit Prompt'}</span>
-                    {showPromptEditor ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
-                  </button>
-                </div>
-
-                {showPromptEditor && (
-                  <div className="mt-2 pt-2 border-t border-slate-100">
-                    <label className="block text-[11px] font-semibold text-slate-500 mb-1">
-                      System Prompt (ROLE + TASK + FORMAT + RULES):
-                    </label>
-                    <textarea
-                      value={customPrompt}
-                      onChange={e => setCustomPrompt(e.target.value)}
-                      rows={4}
-                      className="w-full text-xs font-mono p-2.5 bg-slate-900 text-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-orange-500"
-                    />
-                  </div>
-                )}
-              </div>
-
-              {/* Two Column Input Areas */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Resume Card */}
-                <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs flex flex-col justify-between">
-                  <div>
-                    <div className="flex items-center justify-between mb-2">
-                      <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
-                        <FileText className="w-4 h-4 text-orange-500" />
-                        1. Resume Text
-                      </h3>
-
-                      <div>
-                        <input
-                          type="file"
-                          ref={fileInputRef}
-                          accept=".pdf,.txt,.md"
-                          onChange={handleFileChange}
-                          className="hidden"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => fileInputRef.current?.click()}
-                          className="inline-flex items-center gap-1 text-[11px] font-semibold text-orange-600 bg-orange-50 hover:bg-orange-100 px-2.5 py-1 rounded-md border border-orange-200 transition-colors"
-                        >
-                          <Upload className="w-3 h-3" />
-                          <span>Upload PDF/TXT</span>
-                        </button>
-                      </div>
-                    </div>
-
-                    <textarea
-                      value={resume}
-                      onChange={e => setResume(e.target.value)}
-                      rows={10}
-                      placeholder="Paste resume text here or upload PDF above...&#10;&#10;Include:&#10;• Experience and achievements&#10;• Technical and soft skills&#10;• Education and projects"
-                      className="w-full text-xs font-mono p-3 bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:outline-none focus:ring-2 focus:ring-orange-500 leading-relaxed"
-                    />
-                  </div>
-
-                  <div className="mt-2 flex items-center justify-between text-[11px] text-slate-400">
-                    <span>Words: {resume.trim() ? resume.trim().split(/\s+/).length : 0}</span>
-                    {resume && (
-                      <button onClick={() => setResume('')} className="text-slate-400 hover:text-red-500 font-medium">
-                        Clear
-                      </button>
-                    )}
+                      <Download className="w-3.5 h-3.5" />
+                      <span>Download Report</span>
+                    </button>
+                    <button
+                      onClick={() => window.print()}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-lg transition-colors cursor-pointer"
+                    >
+                      <Printer className="w-3.5 h-3.5" />
+                      <span>Print</span>
+                    </button>
                   </div>
                 </div>
 
-                {/* Job Description Card */}
-                <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs flex flex-col justify-between">
-                  <div>
-                    <div className="flex items-center justify-between mb-2">
-                      <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
-                        <Briefcase className="w-4 h-4 text-blue-500" />
-                        2. Job Description
-                      </h3>
-                    </div>
-
-                    <textarea
-                      value={jobDesc}
-                      onChange={e => setJobDesc(e.target.value)}
-                      rows={10}
-                      placeholder="Paste job description here...&#10;&#10;Include:&#10;• Job title and seniority level&#10;• Required skills and tools&#10;• Responsibilities and qualifications"
-                      className="w-full text-xs font-mono p-3 bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:outline-none focus:ring-2 focus:ring-orange-500 leading-relaxed"
-                    />
-                  </div>
-
-                  <div className="mt-2 flex items-center justify-between text-[11px] text-slate-400">
-                    <span>Words: {jobDesc.trim() ? jobDesc.trim().split(/\s+/).length : 0}</span>
-                    {jobDesc && (
-                      <button onClick={() => setJobDesc('')} className="text-slate-400 hover:text-red-500 font-medium">
-                        Clear
-                      </button>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              {/* Error Message */}
-              {error && (
-                <div className="p-3.5 bg-red-50 border border-red-200 text-red-800 rounded-xl text-xs flex items-start gap-2.5">
-                  <AlertCircle className="w-4 h-4 text-red-500 shrink-0 mt-0.5" />
-                  <div>
-                    <strong>Notice: </strong>
-                    <span>{error}</span>
-                  </div>
-                </div>
-              )}
-
-              {/* Analyze Button */}
-              <button
-                type="button"
-                onClick={handleAnalyze}
-                disabled={isLoading}
-                className="w-full py-3.5 px-4 bg-orange-500 hover:bg-orange-600 disabled:opacity-50 text-white font-bold text-sm rounded-xl transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer"
-              >
-                {isLoading ? (
-                  <>
-                    <RefreshCw className="w-4 h-4 animate-spin" />
-                    <span>Analyzing with Gemini AI (5-10s)...</span>
-                  </>
-                ) : (
-                  <>
-                    <Sparkles className="w-4 h-4" />
-                    <span>Analyze Resume Against Job Description</span>
-                  </>
-                )}
-              </button>
-
-              {/* Results View */}
-              <div ref={resultsRef}>
-                {result && (
-                  <div className="space-y-4 pt-2">
-                    {/* Top Result Banner & Actions */}
-                    <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs flex items-center justify-between flex-wrap gap-2 text-xs">
-                      <div className="flex items-center gap-2">
-                        <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                        <span className="font-bold text-slate-800">Analysis Results Ready</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={handleExportMarkdown}
-                          className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-lg transition-colors"
-                        >
-                          <Download className="w-3.5 h-3.5" />
-                          <span>Export Markdown</span>
-                        </button>
-                        <button
-                          onClick={() => window.print()}
-                          className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-lg transition-colors"
-                        >
-                          <Printer className="w-3.5 h-3.5" />
-                          <span>Print</span>
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* Score Card */}
-                    <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-xs text-center space-y-2">
-                      <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">
-                        Overall ATS Match Score
-                      </span>
-                      <div className="text-5xl font-black text-slate-900">
-                        {result.ats_score}
-                        <span className="text-lg text-slate-400 font-bold">/100</span>
-                      </div>
+                {/* Score & Summary Card */}
+                <div className="grid grid-cols-1 md:grid-cols-12 gap-5 bg-white p-6 rounded-2xl border border-slate-200 shadow-xs">
+                  {/* Left: Overall ATS Score Meter */}
+                  <div className="md:col-span-4 flex flex-col items-center justify-center p-4 border-b md:border-b-0 md:border-r border-slate-100 text-center">
+                    <span className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">
+                      ATS Match Score
+                    </span>
+                    <div className="relative w-36 h-36 flex items-center justify-center">
                       <div
-                        className={`inline-block px-3 py-1 rounded-full text-xs font-bold ${
+                        className={`text-5xl font-black ${
                           result.ats_score >= 80
-                            ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                            : result.ats_score >= 65
-                            ? 'bg-amber-50 text-amber-700 border border-amber-200'
-                            : 'bg-red-50 text-red-700 border border-red-200'
+                            ? 'text-emerald-600'
+                            : result.ats_score >= 60
+                            ? 'text-amber-500'
+                            : 'text-red-600'
                         }`}
                       >
-                        {result.ats_score >= 80
-                          ? 'Excellent Match · Well Optimized'
-                          : result.ats_score >= 65
-                          ? 'Good Match · Minor Revisions'
-                          : 'Fair Match · Key Gaps Detected'}
+                        {result.ats_score}
+                        <span className="text-base text-slate-400 font-bold">/100</span>
                       </div>
                     </div>
+                    <div
+                      className={`mt-2 px-3 py-1 rounded-full text-xs font-extrabold border ${
+                        result.ats_score >= 80
+                          ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                          : result.ats_score >= 60
+                          ? 'bg-amber-50 text-amber-700 border-amber-200'
+                          : 'bg-red-50 text-red-700 border-red-200'
+                      }`}
+                    >
+                      {result.ats_score >= 80
+                        ? 'High Match · Well Optimized'
+                        : result.ats_score >= 60
+                        ? 'Moderate Match · Needs Improvement'
+                        : 'Low Match · Substantial Gaps'}
+                    </div>
+                  </div>
 
-                    {/* Summary */}
-                    <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-xs space-y-2 text-xs">
-                      <h4 className="font-bold text-slate-800 uppercase tracking-wider text-[11px] flex items-center gap-1.5">
-                        <Sparkles className="w-3.5 h-3.5 text-orange-500" />
+                  {/* Right: Executive Summary & Match Analysis */}
+                  <div className="md:col-span-8 flex flex-col justify-center space-y-4 py-2 text-xs">
+                    <div>
+                      <h4 className="font-bold text-slate-900 uppercase tracking-wider text-[11px] mb-1.5 flex items-center gap-1.5 text-red-600">
+                        <Sparkles className="w-3.5 h-3.5" />
                         Executive Assessment
                       </h4>
-                      <p className="text-slate-700 leading-relaxed text-sm font-normal">
+                      <p className="text-slate-700 text-sm leading-relaxed font-normal">
                         {result.summary}
                       </p>
                     </div>
 
-                    {/* Missing Keywords */}
-                    <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-xs space-y-2 text-xs">
-                      <div className="flex items-center justify-between">
-                        <h4 className="font-bold text-slate-800 uppercase tracking-wider text-[11px]">
-                          Missing High-Priority Keywords (Click to copy)
-                        </h4>
-                        <span className="text-slate-400 text-[11px]">Add these to past bullets</span>
+                    <div className="pt-3 border-t border-slate-100">
+                      <h4 className="font-bold text-slate-900 uppercase tracking-wider text-[11px] mb-1.5 flex items-center gap-1.5 text-slate-800">
+                        <Search className="w-3.5 h-3.5 text-slate-500" />
+                        Match Analysis
+                      </h4>
+                      <p className="text-slate-600 leading-relaxed font-normal">
+                        {result.match_analysis}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Matching Skills vs Missing Keywords Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  {/* Matching Skills */}
+                  <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs space-y-3 text-xs">
+                    <div className="flex items-center gap-2">
+                      <div className="w-6 h-6 rounded-md bg-emerald-50 text-emerald-700 flex items-center justify-center font-bold text-xs">
+                        <CheckCheck className="w-3.5 h-3.5" />
                       </div>
-                      <div className="flex flex-wrap gap-1.5 pt-1">
-                        {result.missing_keywords.map(kw => (
+                      <h4 className="font-bold text-slate-900 uppercase tracking-wider text-[11px]">
+                        Matching Skills & Keywords Found
+                      </h4>
+                    </div>
+                    <p className="text-[11px] text-slate-400">
+                      These requirements from the job description were identified in your resume:
+                    </p>
+                    <div className="flex flex-wrap gap-1.5 pt-1">
+                      {result.matching_skills && result.matching_skills.length > 0 ? (
+                        result.matching_skills.map((skill) => (
+                          <span
+                            key={skill}
+                            className="px-2.5 py-1 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-lg text-xs font-semibold"
+                          >
+                            ✓ {skill}
+                          </span>
+                        ))
+                      ) : (
+                        <span className="text-slate-400 italic">No exact matching skills detected.</span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Missing Keywords */}
+                  <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs space-y-3 text-xs">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="w-6 h-6 rounded-md bg-amber-50 text-amber-700 flex items-center justify-center font-bold text-xs">
+                          <AlertCircle className="w-3.5 h-3.5" />
+                        </div>
+                        <h4 className="font-bold text-slate-900 uppercase tracking-wider text-[11px]">
+                          Missing Critical Keywords
+                        </h4>
+                      </div>
+                      <span className="text-slate-400 text-[10px]">Click to copy</span>
+                    </div>
+                    <p className="text-[11px] text-slate-400">
+                      Add these missing skills naturally into your experience bullets:
+                    </p>
+                    <div className="flex flex-wrap gap-1.5 pt-1">
+                      {result.missing_keywords && result.missing_keywords.length > 0 ? (
+                        result.missing_keywords.map((kw) => (
                           <button
                             key={kw}
                             type="button"
                             onClick={() => handleCopyKeyword(kw)}
-                            className="inline-flex items-center gap-1 px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200 rounded-lg text-xs font-semibold transition-all cursor-pointer"
+                            className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200 rounded-lg text-xs font-semibold transition-all cursor-pointer"
+                            title="Click to copy"
                           >
                             <span>{kw}</span>
                             {copiedKeyword === kw ? (
                               <Check className="w-3 h-3 text-emerald-600" />
                             ) : (
-                              <Copy className="w-3 h-3 text-amber-500" />
+                              <Copy className="w-3 h-3 text-amber-500 opacity-60" />
                             )}
                           </button>
-                        ))}
-                      </div>
+                        ))
+                      ) : (
+                        <span className="text-emerald-700 italic">No critical keywords missing!</span>
+                      )}
                     </div>
-
-                    {/* Strengths & Improvements */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {/* Strengths */}
-                      <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-xs space-y-2 text-xs">
-                        <h4 className="font-bold text-slate-800 uppercase tracking-wider text-[11px] flex items-center gap-1.5 text-emerald-700">
-                          <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                          What Your Resume Does Well
-                        </h4>
-                        <ul className="space-y-2 pt-1 text-slate-700">
-                          {result.strengths.map((str, idx) => (
-                            <li key={idx} className="flex items-start gap-2 leading-relaxed">
-                              <span className="text-emerald-500 font-bold">✓</span>
-                              <span>{str}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-
-                      {/* Improvements */}
-                      <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-xs space-y-2 text-xs">
-                        <h4 className="font-bold text-slate-800 uppercase tracking-wider text-[11px] flex items-center gap-1.5 text-orange-700">
-                          <AlertCircle className="w-4 h-4 text-orange-500" />
-                          Recommended Bullet Improvements
-                        </h4>
-                        <ul className="space-y-2 pt-1 text-slate-700">
-                          {result.improvements.map((imp, idx) => (
-                            <li key={idx} className="flex items-start gap-2 leading-relaxed">
-                              <span className="text-orange-500 font-bold">{idx + 1}.</span>
-                              <span>{imp}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    </div>
-
-                    {/* Cover Letter Hook */}
-                    {result.cover_letter_hook && (
-                      <div className="bg-orange-50/60 p-5 rounded-xl border border-orange-200 space-y-2 text-xs">
-                        <div className="flex items-center justify-between">
-                          <h4 className="font-bold text-orange-900 uppercase tracking-wider text-[11px]">
-                            Tailored Cover Letter Opening Hook
-                          </h4>
-                          <button
-                            type="button"
-                            onClick={() => handleCopyHook(result.cover_letter_hook || '')}
-                            className="inline-flex items-center gap-1 text-[11px] font-bold text-orange-700 hover:text-orange-900"
-                          >
-                            {copiedHook ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
-                            <span>{copiedHook ? 'Copied' : 'Copy Hook'}</span>
-                          </button>
-                        </div>
-                        <p className="italic text-slate-800 bg-white p-3 rounded-lg border border-orange-100">
-                          "{result.cover_letter_hook}"
-                        </p>
-                      </div>
-                    )}
                   </div>
-                )}
-              </div>
-            </>
-          )}
-
-          {/* TAB 2: History */}
-          {activeTab === 'history' && (
-            <div className="space-y-4">
-              <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-xs flex items-center justify-between">
-                <div>
-                  <h3 className="text-sm font-bold text-slate-900">
-                    Past Resume Evaluations (Saved in localStorage)
-                  </h3>
-                  <p className="text-xs text-slate-500">
-                    Review and compare your 5 test resume iterations for your project submission.
-                  </p>
                 </div>
-                {history.length > 0 && (
-                  <button
-                    onClick={() => setHistory([])}
-                    className="inline-flex items-center gap-1 text-xs text-red-600 hover:text-red-700 font-semibold px-2.5 py-1 rounded-md hover:bg-red-50"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                    <span>Clear</span>
-                  </button>
-                )}
-              </div>
 
-              {history.length === 0 ? (
-                <div className="bg-white p-10 text-center rounded-xl border border-slate-200 text-xs text-slate-400">
-                  No evaluations saved yet. Run an analysis on the "Resume Analyzer" tab!
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {history.map(item => (
-                    <div
-                      key={item.id}
-                      className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs"
-                    >
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <span className="font-bold text-slate-900 text-sm">
-                            {item.candidateName}
+                {/* Strengths & Weaknesses Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  {/* Strengths */}
+                  <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs space-y-3 text-xs">
+                    <h4 className="font-bold text-emerald-700 uppercase tracking-wider text-[11px] flex items-center gap-1.5">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                      Resume Strengths
+                    </h4>
+                    <ul className="space-y-2 pt-1 text-slate-700">
+                      {result.strengths.map((str, idx) => (
+                        <li key={idx} className="flex items-start gap-2.5 leading-relaxed">
+                          <span className="w-4 h-4 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-[10px] shrink-0 mt-0.5">
+                            ✓
                           </span>
-                          <span className="text-slate-400">→</span>
-                          <span className="text-slate-600">{item.role}</span>
-                          <span
-                            className={`px-2 py-0.5 rounded-full font-bold text-[11px] ${
-                              item.score >= 80 ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'
-                            }`}
-                          >
-                            {item.score}% ATS
+                          <span>{str}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  {/* Weaknesses */}
+                  <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs space-y-3 text-xs">
+                    <h4 className="font-bold text-red-700 uppercase tracking-wider text-[11px] flex items-center gap-1.5">
+                      <XCircle className="w-4 h-4 text-red-600" />
+                      Gaps & Weaknesses
+                    </h4>
+                    <ul className="space-y-2 pt-1 text-slate-700">
+                      {result.weaknesses.map((weak, idx) => (
+                        <li key={idx} className="flex items-start gap-2.5 leading-relaxed">
+                          <span className="w-4 h-4 rounded-full bg-red-100 text-red-700 flex items-center justify-center font-bold text-[10px] shrink-0 mt-0.5">
+                            !
                           </span>
-                        </div>
-                        <p className="text-[11px] text-slate-400 mt-1">{item.date}</p>
-                      </div>
-
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setResult(item.data);
-                          setActiveTab('analyzer');
-                          setTimeout(() => {
-                            resultsRef.current?.scrollIntoView({ behavior: 'smooth' });
-                          }, 100);
-                        }}
-                        className="px-3 py-1.5 bg-orange-50 hover:bg-orange-100 text-orange-600 rounded-lg font-semibold self-start sm:self-auto"
-                      >
-                        View Report →
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* TAB 3: Guide */}
-          {activeTab === 'guide' && (
-            <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs space-y-6 text-xs text-slate-700">
-              <div>
-                <h3 className="text-sm font-bold text-slate-900 mb-1">
-                  Prompt Engineering Framework (The 4 Pillars)
-                </h3>
-                <p className="text-slate-500">
-                  How this project converts raw text into production-grade recruiting intelligence:
-                </p>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="p-3.5 rounded-xl bg-orange-50/60 border border-orange-200 space-y-1">
-                  <span className="font-bold text-orange-900">1. ROLE (Persona)</span>
-                  <p className="text-slate-600 text-[11px]">
-                    "You are an expert career coach and ATS specialist with 10+ years of corporate experience."
-                  </p>
+                          <span>{weak}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
                 </div>
 
-                <div className="p-3.5 rounded-xl bg-blue-50/60 border border-blue-200 space-y-1">
-                  <span className="font-bold text-blue-900">2. TASK (Objective)</span>
-                  <p className="text-slate-600 text-[11px]">
-                    "Rigorously analyze the candidate resume against the job description for keyword gaps."
+                {/* Improvement Suggestions */}
+                <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs space-y-3 text-xs">
+                  <h4 className="font-bold text-slate-900 uppercase tracking-wider text-[11px] flex items-center gap-1.5 text-red-600">
+                    <Sparkles className="w-4 h-4" />
+                    Specific Actionable Improvements
+                  </h4>
+                  <p className="text-slate-500 text-[11px]">
+                    Make these targeted edits to your resume before submitting to maximize recruiter review and ATS pass rates:
                   </p>
-                </div>
-
-                <div className="p-3.5 rounded-xl bg-emerald-50/60 border border-emerald-200 space-y-1">
-                  <span className="font-bold text-emerald-900">3. FORMAT (Structured JSON)</span>
-                  <p className="text-slate-600 text-[11px]">
-                    Forces valid JSON schema with exact fields: ats_score, summary, missing_keywords, improvements.
-                  </p>
-                </div>
-
-                <div className="p-3.5 rounded-xl bg-purple-50/60 border border-purple-200 space-y-1">
-                  <span className="font-bold text-purple-900">4. RULES (Constraints)</span>
-                  <p className="text-slate-600 text-[11px]">
-                    Be specific, data-backed, and use numbers. Penalize missing high-priority technical tools.
-                  </p>
+                  <ul className="space-y-2.5 pt-1 text-slate-700">
+                    {result.improvements.map((imp, idx) => (
+                      <li key={idx} className="flex items-start gap-3 leading-relaxed p-2.5 rounded-xl bg-slate-50 border border-slate-100">
+                        <span className="w-5 h-5 rounded-full bg-red-100 text-red-700 flex items-center justify-center font-extrabold text-[11px] shrink-0 mt-0.5">
+                          {idx + 1}
+                        </span>
+                        <span>{imp}</span>
+                      </li>
+                    ))}
+                  </ul>
                 </div>
               </div>
-
-              <div className="pt-4 border-t border-slate-100 flex items-center justify-between">
-                <span>Ready to deploy your live product on Vercel?</span>
-                <button
-                  onClick={() => setIsDeployModalOpen(true)}
-                  className="px-3.5 py-1.5 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-lg"
-                >
-                  Open Vercel Guide →
-                </button>
-              </div>
-            </div>
-          )}
+            )}
+          </div>
         </main>
       </div>
 
       {/* Footer */}
-      <footer className="border-t border-slate-200 bg-white py-6 px-4 text-center text-xs text-slate-500">
+      <footer className="border-t border-slate-200 bg-white py-6 px-4 text-center text-xs text-slate-500 space-y-1">
         <p className="font-semibold text-slate-700">
-          Built by <strong>{studentName}</strong> · ApnoAI AI/ML Intern · October 2026
+          AI Career Copilot · Built by <strong>Chandrika</strong>
         </p>
-        <p className="text-[11px] text-slate-400 mt-1">
-          Powered by Google Gemini API · Deployable on Vercel
+        <p className="text-[11px] text-slate-400">
+          Powered by Google Gemini 3.8 Flash API
         </p>
       </footer>
-
-      {/* Deploy to Vercel Modal */}
-      {isDeployModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
-          <div className="bg-white rounded-2xl max-w-xl w-full p-6 space-y-4 border border-slate-200 shadow-xl text-xs text-slate-700">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <div className="flex items-center gap-2">
-                <Rocket className="w-5 h-5 text-orange-500" />
-                <h3 className="text-sm font-bold text-slate-900">
-                  How to Deploy to Vercel (Steps 8 & 9)
-                </h3>
-              </div>
-              <button
-                onClick={() => setIsDeployModalOpen(false)}
-                className="text-slate-400 hover:text-slate-700"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            <ol className="list-decimal pl-5 space-y-2.5 leading-relaxed text-slate-600">
-              <li>
-                <strong>Push to GitHub:</strong> Create a new repository named{' '}
-                <code className="bg-slate-100 px-1 py-0.5 rounded text-orange-600 font-mono">
-                  ai-career-copilot-{studentName.toLowerCase().replace(/\s+/g, '-')}
-                </code>{' '}
-                and push this project.
-              </li>
-              <li>
-                <strong>Import to Vercel:</strong> Go to{' '}
-                <a
-                  href="https://vercel.com"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-orange-600 underline font-semibold"
-                >
-                  vercel.com
-                </a>
-                , sign in with GitHub, click <strong>"Add New Project"</strong>, and import your repo.
-              </li>
-              <li>
-                <strong>Vercel Settings:</strong> Framework preset will be <strong>Vite</strong>. Build command is{' '}
-                <code>npm run build</code> and output directory is <code>dist</code>.
-              </li>
-              <li>
-                <strong>Set Environment Variable (Step 9):</strong> In Vercel Project Settings → Environment Variables, add:
-                <div className="mt-1 bg-slate-900 text-white p-2 rounded font-mono text-[11px]">
-                  GEMINI_API_KEY = your_free_key_from_aistudio
-                </div>
-              </li>
-              <li>
-                Click <strong>Deploy</strong>! You will have a live permanent URL in under 1 minute.
-              </li>
-            </ol>
-
-            <div className="p-3 bg-emerald-50 text-emerald-800 rounded-xl border border-emerald-200 text-[11px]">
-              ✓ <strong>Zero Errors Guaranteed:</strong> This project is tested with standard Vite build and compiles cleanly to static production assets!
-            </div>
-
-            <div className="pt-2 text-right">
-              <button
-                onClick={() => setIsDeployModalOpen(false)}
-                className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-lg"
-              >
-                Close Guide
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

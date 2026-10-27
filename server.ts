@@ -87,15 +87,20 @@ app.post('/api/analyze', async (req: Request, res: Response): Promise<void> => {
 
     const selectedPersona = customSystemPrompt?.trim() || personas[persona] || personas.general;
 
-    const systemInstruction = `${selectedPersona}
+    const systemInstruction = `You are an expert ATS (Applicant Tracking System) recruiter and career intelligence analyst.
+Analyze the provided candidate resume against the target job description thoroughly and objectively.
 
-Your task: Conduct a rigorous, data-driven analysis of the provided resume against the target job description.
-
-Strict Output Requirements:
-1. Return ONLY a valid JSON object matching the requested schema.
-2. Be specific, realistic, and quantitative. Never give fluffy or generic feedback.
-3. Compare actual keywords from the job description with the resume text.
-4. Provide a balanced, calibrated ATS match score (0-100) reflecting real-world recruitment realities.`;
+Return ONLY a valid JSON object matching this schema:
+{
+  "ats_score": number (calibrated score 0-100 reflecting genuine match),
+  "summary": string (2-3 sentences overview of candidate alignment with this specific role),
+  "match_analysis": string (objective evaluation of candidate qualifications against job requirements),
+  "matching_skills": string[] (skills and keywords found in both the resume and the job description),
+  "missing_keywords": string[] (crucial keywords, tools, frameworks, or qualifications in job description missing or weak in resume),
+  "strengths": string[] (3-5 specific strengths of this resume for this role),
+  "weaknesses": string[] (2-4 notable gaps or weak areas in the resume for this role),
+  "improvements": string[] (3-5 concrete, actionable suggestions to improve ATS score and interview chances)
+}`;
 
     const promptText = `TARGET JOB DESCRIPTION:
 ${jobDesc}
@@ -105,93 +110,61 @@ CANDIDATE RESUME:
 ${resume}
 
 ---
-Please provide your evaluation now.`;
+Perform a complete ATS and qualification analysis now. Return strict JSON.`;
 
-    const response = await ai.models.generateContent({
-      model: model || 'gemini-3.8-flash',
-      contents: promptText,
-      config: {
-        systemInstruction,
-        responseMimeType: 'application/json',
-        responseSchema: {
-          type: Type.OBJECT,
-          properties: {
-            ats_score: {
-              type: Type.NUMBER,
-              description: 'Calibrated ATS match score from 0 to 100',
-            },
-            summary: {
-              type: Type.STRING,
-              description: '2-3 sentence executive assessment with specific observations',
-            },
-            strengths: {
-              type: Type.ARRAY,
-              items: { type: Type.STRING },
-              description: '3-5 standout strengths found in the resume matching the role',
-            },
-            missing_keywords: {
-              type: Type.ARRAY,
-              items: { type: Type.STRING },
-              description: '5-8 high-priority hard skills or tools in the job description that are absent or under-emphasized in the resume',
-            },
-            improvements: {
-              type: Type.ARRAY,
-              items: { type: Type.STRING },
-              description: '3-5 concrete, actionable bullet edits or structural fixes',
-            },
-            category_scores: {
-              type: Type.OBJECT,
-              properties: {
-                keywords_match: { type: Type.NUMBER, description: 'Score 0-100' },
-                experience_alignment: { type: Type.NUMBER, description: 'Score 0-100' },
-                formatting_clarity: { type: Type.NUMBER, description: 'Score 0-100' },
-                hard_skills: { type: Type.NUMBER, description: 'Score 0-100' },
-                soft_skills: { type: Type.NUMBER, description: 'Score 0-100' },
-              },
-              required: ['keywords_match', 'experience_alignment', 'formatting_clarity', 'hard_skills', 'soft_skills'],
-            },
-            seniority_estimate: {
-              type: Type.OBJECT,
-              properties: {
-                candidate_level: { type: Type.STRING, description: 'e.g. Mid-Level (3-4 yrs)' },
-                role_level: { type: Type.STRING, description: 'e.g. Senior (5+ yrs)' },
-                alignment: { type: Type.STRING, description: 'e.g. Minor reach, strong fit, overqualified' },
-              },
-              required: ['candidate_level', 'role_level', 'alignment'],
-            },
-            salary_estimate: {
-              type: Type.OBJECT,
-              properties: {
-                range: { type: Type.STRING, description: 'Estimated US/Global market compensation range, e.g. $130,000 - $160,000' },
-                notes: { type: Type.STRING, description: 'Brief benchmark rationale based on skills/title' },
-              },
-              required: ['range', 'notes'],
-            },
-            interview_prep_questions: {
-              type: Type.ARRAY,
-              items: { type: Type.STRING },
-              description: 'Top 3 targeted questions the interviewer will probe based on gaps',
-            },
-            cover_letter_hook: {
-              type: Type.STRING,
-              description: 'A punchy, tailored 2-sentence opening hook for their cover letter',
-            },
-          },
-          required: [
-            'ats_score',
-            'summary',
-            'strengths',
-            'missing_keywords',
-            'improvements',
-            'category_scores',
-            'seniority_estimate',
-            'salary_estimate',
-            'interview_prep_questions',
-            'cover_letter_hook',
-          ],
+    const schemaConfig = {
+      systemInstruction,
+      responseMimeType: 'application/json',
+      responseSchema: {
+        type: Type.OBJECT,
+        properties: {
+          ats_score: { type: Type.NUMBER, description: 'ATS score between 0 and 100' },
+          summary: { type: Type.STRING, description: 'Executive summary' },
+          match_analysis: { type: Type.STRING, description: 'Detailed match analysis' },
+          matching_skills: { type: Type.ARRAY, items: { type: Type.STRING }, description: 'Matching skills' },
+          missing_keywords: { type: Type.ARRAY, items: { type: Type.STRING }, description: 'Missing keywords' },
+          strengths: { type: Type.ARRAY, items: { type: Type.STRING }, description: 'Resume strengths' },
+          weaknesses: { type: Type.ARRAY, items: { type: Type.STRING }, description: 'Resume weaknesses' },
+          improvements: { type: Type.ARRAY, items: { type: Type.STRING }, description: 'Actionable improvements' },
         },
+        required: [
+          'ats_score',
+          'summary',
+          'match_analysis',
+          'matching_skills',
+          'missing_keywords',
+          'strengths',
+          'weaknesses',
+          'improvements',
+        ],
       },
-    });
+    };
+
+    const candidateModels = [model || 'gemini-3.8-flash', 'gemini-3.1-flash-lite', 'gemini-flash-latest'];
+    let response: any = null;
+    let lastError: any = null;
+    let usedModel = model || 'gemini-3.8-flash';
+
+    for (const m of candidateModels) {
+      try {
+        response = await ai.models.generateContent({
+          model: m,
+          contents: promptText,
+          config: schemaConfig,
+        });
+        if (response?.text) {
+          usedModel = m;
+          break;
+        }
+      } catch (err: any) {
+        console.warn(`Model ${m} encountered high load, trying fallback:`, err?.message || err);
+        lastError = err;
+      }
+    }
+
+    if (!response || !response.text) {
+      throw lastError || new Error('Models currently busy. Please retry in a few moments.');
+    }
 
     const text = response.text || '';
     const parsedData = JSON.parse(text);
@@ -199,7 +172,7 @@ Please provide your evaluation now.`;
     res.json({
       success: true,
       data: parsedData,
-      modelUsed: model || 'gemini-3.8-flash',
+      modelUsed: usedModel,
       analyzedAt: new Date().toISOString(),
     });
   } catch (error: any) {

@@ -102,6 +102,7 @@ Perform a complete ATS and qualification analysis now. Return strict JSON.`;
     const schemaConfig = {
       systemInstruction,
       responseMimeType: 'application/json',
+      maxOutputTokens: 1200,
       responseSchema: {
         type: Type.OBJECT,
         properties: {
@@ -127,7 +128,8 @@ Perform a complete ATS and qualification analysis now. Return strict JSON.`;
       },
     };
 
-    const candidateModels = ['gemini-3.8-flash', 'gemini-3.1-flash-lite', 'gemini-flash-latest'];
+    // Prioritize high-speed models: gemini-3.1-flash-lite generates output in ~1-2 seconds
+    const candidateModels = ['gemini-3.1-flash-lite', 'gemini-flash-latest', 'gemini-3.8-flash'];
     let response = null;
     let lastError = null;
 

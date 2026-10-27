@@ -132,6 +132,7 @@ Perform a complete ATS and qualification analysis now. Return strict JSON.`;
     const schemaConfig = {
       systemInstruction,
       responseMimeType: 'application/json',
+      maxOutputTokens: 1200,
       responseSchema: {
         type: Type.OBJECT,
         properties: {
@@ -157,10 +158,10 @@ Perform a complete ATS and qualification analysis now. Return strict JSON.`;
       },
     };
 
-    const candidateModels = [model || 'gemini-3.8-flash', 'gemini-3.1-flash-lite', 'gemini-flash-latest'];
+    const candidateModels = ['gemini-3.1-flash-lite', 'gemini-flash-latest', model || 'gemini-3.8-flash'];
     let response: any = null;
     let lastError: any = null;
-    let usedModel = model || 'gemini-3.8-flash';
+    let usedModel = 'gemini-3.1-flash-lite';
 
     for (const m of candidateModels) {
       try {

@@ -95,9 +95,9 @@ export default function App() {
     setError(null);
     setResult(null);
 
-    // 45-second timeout controller so it never hangs in infinite loading
+    // 30-second timeout controller so it never hangs in infinite loading
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 45000);
+    const timeoutId = setTimeout(() => controller.abort(), 30000);
 
     try {
       const response = await fetch('/api/analyze', {

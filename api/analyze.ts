@@ -77,8 +77,8 @@ ${resume}
 ---
 Perform a complete ATS and qualification analysis now. Return ONLY raw JSON without markdown formatting.`;
 
-    // Try models with fallback if a model is unavailable or rate limited
-    const candidateModels = ['gemini-1.5-flash', 'gemini-2.0-flash', 'gemini-2.5-flash'];
+    // Active models per Google API specification: gemini-3.8-flash and gemini-3.1-flash-lite
+    const candidateModels = ['gemini-3.8-flash', 'gemini-3.1-flash-lite', 'gemini-flash-latest'];
     let textResult = '';
     let lastError: any = null;
 

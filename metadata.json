@@ -1,6 +1,6 @@
 {
   "name": "AI Career Copilot — Resume & ATS Intelligence",
-  "description": "Production-grade AI Career Copilot that analyzes resumes against job descriptions using Google Gemini, featuring prompt engineering personas, ATS scoring, PDF parsing, skill gap radar, and history tracking.",
+  "description": "Production-grade AI Career Copilot that analyzes resumes against job descriptions, featuring ATS scoring, PDF parsing, skill gap analysis, and tailored career insights.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }
